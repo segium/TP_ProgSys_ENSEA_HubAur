@@ -2,6 +2,8 @@
 /*#include <sys/type.h>*/
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #define BUFSIZE 15
 
 
