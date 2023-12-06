@@ -1,6 +1,5 @@
 #include "enseash.h"
 
-
 int basic_print_test(){
 	int win=write(1,"welcome_in_the_SCAPWORLD",strlen("welcome_in_the_SCAPWORLD")-1);
 	if (win==strlen("welcome_in_the_SCAPWORLD")-1){return(1);}
@@ -8,57 +7,36 @@ int basic_print_test(){
 	
 	}
 
-int main(){
-	
+int basic_interaction_shell(){
 	char buf[BUFSIZE];
-	ssize_t entryREAD;
-			
-	//SHELL EXECUTION
 	
-	while(1){
-		
-		write(1,PROMPT,strlen(PROMPT));
-		entryREAD = read(0, buf, sizeof(buf));
-		
-		//ERROR CHECK//
-		if (entryREAD < 0){
-			write(1,ERR_READ,strlen(ERR_READ));
-		}
-		
-		//CTRL D CHECK//
-		if (entryREAD == 0){
-			write(1,BYE,strlen(BYE));
-			return(EXIT_SUCCESS);
-		}
-				
-		//Remove \n for execution//
-        buf[strcspn(buf, "\n")] = '\0';
-
-		//EXIT CHECK//
-		if (strncmp(buf,"exit",strlen("exit"))==0){
-			write(1,BYE,strlen(BYE));
-			return(EXIT_SUCCESS);
-			
-		}
-
-        //COMMANDS EXECUTION//
-        
-        int PID = fork();
-        
-        if (PID == 0) {
-			
-            execlp("/bin/sh", "sh", "-c", buf, NULL); 
-            perror("Error with execlp");
-            _exit(1);
-            
-        } else if (PID < 0) {
-			
-            perror("Error in the fork process");
-            
-        } else {
-            // Wait for the son to end//
-            wait(NULL);
-        }
+	if(write(1,"enseash%",strlen("enseash%"))==-1){
+				printf("problem sir");
+				return(0);
+				}
+	
+	while((strncmp(buf,"exit",strlen("exit"))!=0) /*|| (strncmp(buf,EOF,strlen(EOF))!=0)*/ ){
+		if(read(1,buf,BUFSIZE)==-1){
+			if(write(1,"Problem to read your command",strlen("Problem to read your commande sir")==-1)){
+				printf("CAN'T READ OR WRITE SIR");   // this line if print in the only and critical case of the user cann't read and write
+				return(0);
+				}
+			}
+		if(write(1,"enseash%",strlen("enseash%"))==-1){
+				printf("problem sir");
+				return(0);
+				}
 	}
+	
 	return(1);
 }
+
+int main(/*int argc,char* argv[]*/){
+
+	if (basic_interaction_shell()==1){return(1);}
+	else{return(0);}
+	
+
+}
+
+
