@@ -47,7 +47,7 @@ int main(){
         
         if (PID == 0) {
 			
-            execlp(buf, buf, NULL);
+            execlp("/bin/sh", "sh", "-c", buf, NULL); 
             perror("Error with execlp");
             _exit(1);
             
