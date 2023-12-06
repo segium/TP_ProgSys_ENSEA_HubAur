@@ -1,5 +1,7 @@
 #include "enseash.h"
 
+
+
 int basic_print_test(){
 	int win=write(1,"welcome_in_the_SCAPWORLD",strlen("welcome_in_the_SCAPWORLD")-1);
 	if (win==strlen("welcome_in_the_SCAPWORLD")-1){return(1);}
@@ -7,36 +9,86 @@ int basic_print_test(){
 	
 	}
 
-int basic_interaction_shell(){
+int main(){
+	
 	char buf[BUFSIZE];
+	ssize_t entryREAD;
 	
-	if(write(1,"enseash%",strlen("enseash%"))==-1){
-				printf("problem sir");
-				return(0);
-				}
+	int returnCode = 0;	
 	
-	while((strncmp(buf,"exit",strlen("exit"))!=0) /*|| (strncmp(buf,EOF,strlen(EOF))!=0)*/ ){
-		if(read(1,buf,BUFSIZE)==-1){
-			if(write(1,"Problem to read your command",strlen("Problem to read your commande sir")==-1)){
-				printf("CAN'T READ OR WRITE SIR");   // this line if print in the only and critical case of the user cann't read and write
-				return(0);
-				}
-			}
-		if(write(1,"enseash%",strlen("enseash%"))==-1){
-				printf("problem sir");
-				return(0);
-				}
+	struct timespec start_time, end_time;
+    long time_elapsed = 0;
+	
+	//SHELL EXECUTION
+	
+	while(1){
+		
+		//RETURN OF SIGNAL/EXIT CODE
+		char extPROMPT[BUFSIZE];
+		if (WIFEXITED(returnCode)) {
+			
+			snprintf(extPROMPT, BUFSIZE, "(Exit: %d|%ld ms) ", WEXITSTATUS(returnCode),time_elapsed);
+			
+		} else {
+			
+			snprintf(extPROMPT, BUFSIZE, "(Sign: %d|%ld ms) ", WTERMSIG(returnCode),time_elapsed);
+			
+		}
+		
+		write(1, extPROMPT, strlen(extPROMPT));
+		
+		write(1,PROMPT,strlen(PROMPT));
+		
+		entryREAD = read(0, buf, sizeof(buf));
+		
+		//ERROR CHECK//
+		
+		if (entryREAD < 0){
+			write(1,ERR_READ,strlen(ERR_READ));
+		}
+		
+		//CTRL D CHECK//
+		
+		if (entryREAD == 0){
+			write(1,BYE,strlen(BYE));
+			return(EXIT_SUCCESS);
+		}
+				
+		//Remove \n for execution//
+		
+        buf[strcspn(buf, "\n")] = '\0';
+
+		//EXIT CHECK//
+		
+		if (strncmp(buf,"exit",strlen("exit"))==0){
+			write(1,BYE,strlen(BYE));
+			return(EXIT_SUCCESS);
+			
+		}
+
+        //COMMANDS EXECUTION//
+        
+        clock_gettime(CLOCK_MONOTONIC, &start_time);
+        
+        int PID = fork();
+        
+        if (PID == 0) {
+			
+            execlp("/bin/sh", "sh", "-c", buf, NULL);
+            perror("Error with execlp");
+            _exit(1);
+            
+        } else if (PID < 0) {
+			
+            perror("Error in the fork process");
+            
+        } else {
+            // Wait for the son to end//
+            
+            wait(&returnCode);
+            clock_gettime(CLOCK_MONOTONIC, &end_time);
+			time_elapsed = ((end_time.tv_nsec - start_time.tv_nsec) / 1e6);//for ms conversion
+        }
 	}
-	
 	return(1);
 }
-
-int main(/*int argc,char* argv[]*/){
-
-	if (basic_interaction_shell()==1){return(1);}
-	else{return(0);}
-	
-
-}
-
-
