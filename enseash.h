@@ -16,4 +16,8 @@
 /*functions*/
 
 int basic_print_test(); 
-int basic_interaction_shell(); 
+void exit.time_print();
+void error_check();
+void ctrlD();
+void returnCodeVar();
+void exec_command();

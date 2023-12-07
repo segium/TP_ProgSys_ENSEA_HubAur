@@ -1,14 +1,5 @@
 #include "enseash.h"
 
-
-
-int basic_print_test(){
-	int win=write(1,"welcome_in_the_SCAPWORLD",strlen("welcome_in_the_SCAPWORLD")-1);
-	if (win==strlen("welcome_in_the_SCAPWORLD")-1){return(1);}
-	else{return(0);}
-	
-	}
-
 int main(){
 	
 	char buf[BUFSIZE];
@@ -24,18 +15,10 @@ int main(){
 	while(1){
 		
 		//RETURN OF SIGNAL/EXIT CODE
-		char extPROMPT[BUFSIZE];
-		if (WIFEXITED(returnCode)) {
-			
-			snprintf(extPROMPT, BUFSIZE, "(Exit: %d|%ld ms) ", WEXITSTATUS(returnCode),time_elapsed);
-			
-		} else {
-			
-			snprintf(extPROMPT, BUFSIZE, "(Sign: %d|%ld ms) ", WTERMSIG(returnCode),time_elapsed);
-			
-		}
 		
-		write(1, extPROMPT, strlen(extPROMPT));
+		char extPROMPT[BUFSIZE];
+		
+		exit.time_print(); //Prompt with Exit/Sign + time of last command
 		
 		write(1,PROMPT,strlen(PROMPT));
 		
@@ -43,16 +26,11 @@ int main(){
 		
 		//ERROR CHECK//
 		
-		if (entryREAD < 0){
-			write(1,ERR_READ,strlen(ERR_READ));
-		}
+		error_check();
 		
 		//CTRL D CHECK//
 		
-		if (entryREAD == 0){
-			write(1,BYE,strlen(BYE));
-			return(EXIT_SUCCESS);
-		}
+		ctrlD();
 				
 		//Remove \n for execution//
 		
@@ -70,25 +48,10 @@ int main(){
         
         clock_gettime(CLOCK_MONOTONIC, &start_time);
         
-        int PID = fork();
         
-        if (PID == 0) {
-			
-            execlp("/bin/sh", "sh", "-c", buf, NULL);
-            perror("Error with execlp");
-            _exit(1);
-            
-        } else if (PID < 0) {
-			
-            perror("Error in the fork process");
-            
-        } else {
-            // Wait for the son to end//
-            
-            wait(&returnCode);
-            clock_gettime(CLOCK_MONOTONIC, &end_time);
-			time_elapsed = ((end_time.tv_nsec - start_time.tv_nsec) / 1e6);//for ms conversion
-        }
 	}
 	return(1);
 }
+
+
+
