@@ -8,7 +8,8 @@ char message[256];
 struct addrinfo hints, *res;
 int sockfd;
 
-#define PORT "69"
+#define DATASIZE 1024
+#define PORT "1069"
 
 //ERROR HANDLING//
 
@@ -34,8 +35,26 @@ void ERR_SOCKET() {
     exit(EXIT_FAILURE);
 }
 
-void ERR_CONNECT() {
-    char ERR_message[] = "Error connecting to the server.\n";
+void ERR_SEND_WRQ() {
+    char ERR_message[] = "Error sending data to the server. Check WRQ.\n";
+    write(1, ERR_message, strlen(ERR_message));
+    exit(EXIT_FAILURE);
+}
+
+void ERR_SEND_data() {
+    char ERR_message[] = "Error sending data to the server. Check the data transfer.\n";
+    write(1, ERR_message, strlen(ERR_message));
+    exit(EXIT_FAILURE);
+}
+
+void ERR_RECEICVE_ack() {
+    char ERR_message[] = "Error with the recption of ack.\n";
+    write(1, ERR_message, strlen(ERR_message));
+    exit(EXIT_FAILURE);
+}
+
+void ERR_OPEN() {
+    char ERR_message[] = "Error when opening file.\n";
     write(1, ERR_message, strlen(ERR_message));
     exit(EXIT_FAILURE);
 }
@@ -54,32 +73,68 @@ void GET_Info(char* host){
         ERR_GETADR();
         
     }
+    
     freeaddrinfo(res);
+    
 }
 
-
+void SEND_data(int sockfd, const char *data, size_t size) {
+	
+    if (sendto(sockfd, data, size, 0, res->ai_addr, res->ai_addrlen) == -1) {
+		
+        ERR_SEND_data();
+        
+    }
+}
 
 void puttftp(char* host, char* file) {
 	
 	//Creation of the socket + error check
 	
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		
         ERR_SOCKET();
+        
     }
 
     GET_Info(host);
 
-    // Connection to the server + error check
-    
-    if (connect(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
-        ERR_CONNECT();
-    }
-
 	sprintf(message, "Upload of %s on the server %s\n", file, host);
     write(1, message, strlen(message));
     
-    close(sockfd);
+    //OPEN FILE//
     
+    FILE *fp = fopen(file, "rb");
+    
+    if (!fp) {
+        
+        ERR_OPEN();
+        
+    }
+    
+    char buffer[DATASIZE];
+    size_t bytesRead;
+
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+        SEND_data(sockfd, buffer, bytesRead);
+    }
+   
+    fclose(fp);
+  
+}
+
+void SEND_WRQ(int sockfd, char *file) {
+	
+    char wrq[DATASIZE];
+    sprintf(wrq, "WRQ %s\n.", file);
+    write(1, wrq, strlen(wrq));
+
+     if (sendto(sockfd, wrq, strlen(wrq), 0, res->ai_addr, res->ai_addrlen) == -1) {
+        
+        ERR_SEND_WRQ();
+	}
+	
+	close(sockfd);
 }
 
 int main(int argc , char* argv[]) {
@@ -94,6 +149,8 @@ int main(int argc , char* argv[]) {
 	char* file = argv[2];
 	
 	puttftp(host,file);
+	
+	SEND_WRQ(sockfd, file);
 	
 	return(0);
 
